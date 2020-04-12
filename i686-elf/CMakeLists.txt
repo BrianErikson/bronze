@@ -34,17 +34,28 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   endforeach()
 endif()
 
-add_executable(boot
+add_executable(i686-os
   ${ASM_SRCS}
 )
-add_dependencies(boot kernel)
+add_dependencies(i686-os kernel)
 
-target_link_libraries(boot
+target_link_libraries(i686-os
   kernel
 )
 
-add_custom_command(TARGET boot POST_BUILD
+add_custom_command(TARGET i686-os POST_BUILD
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/sanity_checks.sh
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Running sanity checks..."
 )
+
+add_custom_command(TARGET i686-os POST_BUILD
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/mkiso.sh
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMENT "Creating iso..."
+)
+
+add_custom_target(run_i686-os
+  qemu-system-i386 -cdrom i686-os.iso -m 256M
+  WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+add_dependencies(run_i686-os i686-os)
