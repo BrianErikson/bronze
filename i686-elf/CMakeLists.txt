@@ -42,3 +42,9 @@ add_dependencies(boot kernel)
 target_link_libraries(boot
   kernel
 )
+
+add_custom_command(TARGET boot POST_BUILD
+  COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/sanity_checks.sh
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  COMMENT "Running sanity checks..."
+)
