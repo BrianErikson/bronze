@@ -11,7 +11,6 @@ set -o errexit
 set -o errtrace
 set -o nounset
 
-mkdir -p build/iso/boot/grub
-rsync -chav build/i686-os build/iso/boot/i686-os
-rsync -chav grub.cfg build/iso/boot/grub/grub.cfg
-grub-mkrescue -o build/i686-os.iso build/iso
+grub-file --is-x86-multiboot ./build/bronze
+
+echo "Sanity checks completed successfully"

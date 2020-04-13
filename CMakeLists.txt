@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(i686 CXX)
+project(bronze CXX)
 
 set(CMAKE_SYSTEM_NAME i686)
 set(CMAKE_SYSTEM_PROCESSOR x86)
@@ -11,8 +11,28 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} -ffreestanding)
 set(CMAKE_EXE_LINKER_FLAGS -nostdlib)
 
+set(CMAKE_SYSROOT ${CMAKE_BINARY_DIR}/sysroot)
+set(CMAKE_INSTALL_PREFIX ${CMAKE_SYSROOT})
+set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
+set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
+set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
+
+set(kernel_SRCS
+  src/kernel/kernel/kmain.cc
+  src/kernel/kernel/tty.cc
+)
+
 add_library(kernel STATIC
-  src/kmain.cc
+  ${kernel_SRCS}
+)
+
+target_include_directories(kernel PUBLIC
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/kernel/include
+)
+
+add_custom_command(TARGET kernel POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/kernel/include ${CMAKE_SYSROOT}/usr/include
 )
 
 # NASM =================================================
@@ -25,7 +45,7 @@ set(CMAKE_ASM_NASM_LINK_EXECUTABLE "/usr/bin/i686-elf-ld <FLAGS> <CMAKE_ASM_NASM
     <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 
 set(ASM_SRCS
-  src/boot.asm
+  src/kernel/arch/i686/boot.asm
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -34,28 +54,28 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   endforeach()
 endif()
 
-add_executable(i686-os
+add_executable(bronze
   ${ASM_SRCS}
 )
-add_dependencies(i686-os kernel)
+add_dependencies(bronze kernel)
 
-target_link_libraries(i686-os
+target_link_libraries(bronze
   kernel
 )
 
-add_custom_command(TARGET i686-os POST_BUILD
+add_custom_command(TARGET bronze POST_BUILD
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/sanity_checks.sh
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Running sanity checks..."
 )
 
-add_custom_command(TARGET i686-os POST_BUILD
+add_custom_command(TARGET bronze POST_BUILD
   COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/mkiso.sh
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Creating iso..."
 )
 
-add_custom_target(run_i686-os
-  qemu-system-i386 -cdrom i686-os.iso -m 256M
+add_custom_target(run_bronze
+  qemu-system-i386 -cdrom bronze.iso -m 256M
   WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-add_dependencies(run_i686-os i686-os)
+add_dependencies(run_bronze bronze)
