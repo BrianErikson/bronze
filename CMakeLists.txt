@@ -35,7 +35,7 @@ add_custom_command(TARGET kernel POST_BUILD
   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/src/kernel/include ${CMAKE_SYSROOT}/usr/include
 )
 
-# NASM =================================================
+# crt ====================================================
 enable_language(ASM_NASM)
 set(CAN_USE_ASSEMBLER TRUE)
 set(CMAKE_ASM_NASM_OBJECT_FORMAT elf32)
@@ -44,23 +44,35 @@ set(CMAKE_ASM_NASM_COMPILE_OBJECT "<CMAKE_ASM_NASM_COMPILER> <INCLUDES> \
 set(CMAKE_ASM_NASM_LINK_EXECUTABLE "/usr/bin/i686-elf-ld <FLAGS> <CMAKE_ASM_NASM_LINK_FLAGS> \
     <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>")
 
-set(ASM_SRCS
+add_library(crti OBJECT
+  src/kernel/arch/i686/crti.asm
+)
+
+add_library(crtn OBJECT
+  src/kernel/arch/i686/crtn.asm
+)
+
+# bronze =================================================
+
+set(bronze_SRCS
   src/kernel/arch/i686/boot.asm
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  foreach(asm_file ASM_SRCS)
+  foreach(asm_file bronze_SRCS)
     set_source_files_properties(asm_file "-g -Fdwarf")
   endforeach()
 endif()
 
 add_executable(bronze
-  ${ASM_SRCS}
+  ${bronze_SRCS}
 )
-add_dependencies(bronze kernel)
+add_dependencies(bronze kernel crti crtn)
 
 target_link_libraries(bronze
+  $<TARGET_OBJECTS:crtn>
   kernel
+  $<TARGET_OBJECTS:crti>
 )
 
 add_custom_command(TARGET bronze POST_BUILD

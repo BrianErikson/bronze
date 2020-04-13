@@ -10,13 +10,20 @@
 #error "This tutorial needs to be compiled with a ix86-elf compiler"
 #endif
 
+extern "C"
+__attribute__ ((constructor)) void ctor() {
+  terminal_initialize();
+  terminal_writestring("Ctor");
+}
+
+extern "C"
+__attribute__ ((destructor)) void dtor() {
+  terminal_writestring("Dtor");
+}
 
 extern "C"
 void kernel_main(void)
 {
-  /* Initialize terminal interface */
-  terminal_initialize();
-
   /* Newline support is left as an exercise. */
   terminal_writestring("Hello, kernel World!\n");
 }
