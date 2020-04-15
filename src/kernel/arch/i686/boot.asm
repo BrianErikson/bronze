@@ -72,8 +72,17 @@ _start:
 	; stack since (pushed 0 bytes so far) and the alignment is thus
 	; preserved and the call is well defined.
         ; note, that if you are building on Windows, C functions may have "_" prefix in assembly: _kernel_main
+    extern kernel_early_main
+    call kernel_early_main
+
+    extern _init
+    call _init
+
 	extern kernel_main
 	call kernel_main
+
+	extern _fini
+	call _fini
 
 	; If the system has nothing more to do, put the computer into an
 	; infinite loop. To do that:
