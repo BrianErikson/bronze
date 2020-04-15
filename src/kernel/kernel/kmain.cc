@@ -11,14 +11,20 @@
 #endif
 
 extern "C"
-__attribute__ ((constructor)) void ctor() {
-  terminal_initialize();
+__attribute__ ((constructor)) void startctor() {
   terminal_writestring("Ctor");
 }
 
 extern "C"
-__attribute__ ((destructor)) void dtor() {
+__attribute__ ((destructor)) void enddtor() {
   terminal_writestring("Dtor");
+}
+
+extern "C"
+void kernel_early_main(void)
+{
+  terminal_initialize();
+  terminal_writestring("Early Hello, kernel World!\n");
 }
 
 extern "C"
